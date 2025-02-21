@@ -41,7 +41,7 @@ jobs:
           dataminer-catalog-upload with-registration --path-to-artifact "${{ github.workspace }}/test.dmprotocol" `
           --catalog-identifier "8f3c95c5-7da4-4567-9759-40f459ac1c09" `
           --uri-sourcecode "https://github.com/${{ github.repository }}" `
-          --version "0.0.${{ github.run_number }}-prerelease" `
+          --artifact-version "0.0.${{ github.run_number }}-prerelease" `
           --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }}
       
       - name: Deploy protocol
