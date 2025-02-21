@@ -1,0 +1,49 @@
+name: DataMiner CICD Connector Deploy Only
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: []
+    tags:
+      - "[0-9]+.[0-9]+.[0-9]+.[0-9]+"
+      - "[0-9]+.[0-9]+.[0-9]+.[0-9]+-**"
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+
+   # Optional 0 or More CD Jobs as needed
+  CD:
+   # if: github.ref_type == 'tag'
+    environment: development
+    name: CD
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install .NET Tools
+        run: |
+          dotnet tool install -g Skyline.DataMiner.CICD.Tools.Packager
+          dotnet tool install -g Skyline.DataMiner.CICD.Tools.DataMinerDeploy
+
+      - name: Create protocol package
+        if: github.ref_type == 'branch'
+        run: dataminer-package-create dmprotocol "${{ github.workspace }}/Protocol" --output "${{ github.workspace }}" --name "test"
+      
+      - name: Upload protocol to Catalog
+        id: UploadDmprotocol
+        run: dataminer-catalog-upload with-registration --path-to-artifact "${{ github.workspace }}/test.dmprotocol" \
+          --catalog-identifier "8f3c95c5-7da4-4567-9759-40f459ac1c09" \
+          --uri-sourcecode "https://github.com/${{ github.repository }}" \
+          --version "0.0.${{ github.run_number }}-prerelease" \
+          --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }}
+      
+      - name: Deploy protocol
+        run: dataminer-package-deploy from-catalog --catalog-id "8f3c95c5-7da4-4567-9759-40f459ac1c09" \
+          --catalog-version "0.0.${{ github.run_number }}-prerelease" \
+          --agent-destination-id "b6226b76-3619-4604-ae37-11339299f154" \
+          --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }}
+
