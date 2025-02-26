@@ -37,6 +37,10 @@ jobs:
         echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
       
+    - name: Check Output
+      run: |
+        echo "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}"
+      
     - name: Deploy protocol
       run: |
         dataminer-package-deploy from-catalog --artifact-id "${{ steps.UploadDmprotocol.outputs.uploadOutput }}" --dm-catalog-token "${{ secrets.DATAMINER_DEPLOY_KEY }}" --debug
