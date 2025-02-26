@@ -24,19 +24,16 @@ jobs:
     - name: Install DataMiner Deploy
       run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.DataMinerDeploy
 
-    - name: Create DMPROTOCOL
-      run: dataminer-package-create dmprotocol ${{ github.workspace }} --name HelloFromGithubUbuntu --output ${{ github.workspace }}
-
-    - name: Upload DMPROTOCOL
-      id: UploadDMPROTOCOL
+    - name: Create protocol package
+      if: github.ref_type == 'branch'
+      run: dataminer-package-create dmprotocol "${{ github.workspace }}" --output "${{ github.workspace }}" --name "test"
+      
+    - name: Upload protocol
+      id: UploadDmprotocol
       run: |
-        echo "uploadOutput=$(dataminer-catalog-upload --path-to-artifact "${{ github.workspace }}/HelloFromGithubUbuntu.dmprotocol" --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }})" >> "$GITHUB_OUTPUT"
+        echo "uploadOutput=$(dataminer-catalog-upload --path-to-artifact "${{ github.workspace }}/test.dmprotocol" --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }})" >> $GITHUB_OUTPUT
       shell: bash
       
-    - name: Check Output
+    - name: Deploy protocol
       run: |
-        echo "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}"
-        
-    - name: Deploy DMAPP
-      run: dataminer-package-deploy from-catalog --artifact-id "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}" --dm-catalog-token "${{ secrets.DATAMINER_DEPLOY_KEY }}"
-      shell: bash
+        dataminer-package-deploy from-catalog --artifact-id "${{ steps.UploadDmprotocol.outputs.uploadOutput }}" --dm-catalog-token "${{ secrets.DATAMINER_DEPLOY_KEY }}" --debug
