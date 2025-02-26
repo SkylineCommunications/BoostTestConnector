@@ -1,0 +1,42 @@
+name: BasicDeployUbuntu
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+jobs:
+
+  deployment:
+    runs-on: ubuntu-latest 
+    
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: InstallPackageCreation
+      run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.Packager
+    - name: Install Catalog Upload
+      run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.CatalogUpload
+    - name: Install DataMiner Deploy
+      run: dotnet tool install -g Skyline.DataMiner.CICD.Tools.DataMinerDeploy
+
+    - name: Create DMPROTOCOL
+      run: dataminer-package-create dmprotocol ${{ github.workspace }} --name HelloFromGithubUbuntu --output ${{ github.workspace }}
+
+    - name: Upload DMPROTOCOL
+      id: UploadDMPROTOCOL
+      run: |
+        echo "uploadOutput=$(dataminer-catalog-upload --path-to-artifact "${{ github.workspace }}/HelloFromGithubUbuntu.dmprotocol" --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }})" >> $GITHUB_OUTPUT
+      shell: bash
+      
+    - name: Check Output
+      run: |
+        echo "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}"
+        
+    - name: Deploy DMAPP
+      run: dataminer-package-deploy from-catalog --artifact-id "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}" --dm-catalog-token "${{ secrets.DATAMINER_DEPLOY_KEY }}"
+      shell: bash
