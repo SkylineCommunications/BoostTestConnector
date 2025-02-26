@@ -38,6 +38,7 @@ jobs:
       shell: bash
       
     - name: Check Output
+      if: always()
       run: |
         echo "${{ steps.UploadDMPROTOCOL.outputs.uploadOutput }}"
       
