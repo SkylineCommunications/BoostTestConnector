@@ -31,7 +31,10 @@ jobs:
     - name: Upload protocol
       id: UploadDmprotocol
       run: |
-        echo "uploadOutput=$(dataminer-catalog-upload --path-to-artifact "${{ github.workspace }}/test.dmprotocol" --dm-catalog-token ${{ secrets.DATAMINER_DEPLOY_KEY }})" >> $GITHUB_OUTPUT
+        uploadOutput=$(dataminer-catalog-upload --path-to-artifact "${{ github.workspace }}/test.dmprotocol" --dm-catalog-token "${{ secrets.DATAMINER_DEPLOY_KEY }}")
+        echo "uploadOutput<<EOF" >> $GITHUB_OUTPUT
+        echo "$uploadOutput" >> $GITHUB_OUTPUT
+        echo "EOF" >> $GITHUB_OUTPUT
       shell: bash
       
     - name: Deploy protocol
